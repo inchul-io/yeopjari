@@ -9,6 +9,11 @@
   const menu = document.getElementById('menu');
   const statusEl = document.getElementById('status');
   const SCALE = 4;
+  const K = [0.5, 0.75, 1].includes(cfg.size) ? cfg.size : 0.5;   // 캐릭터 크기 배율
+  const CH = Math.round(68 * K);                                     // 화면에 보이는 캐릭터 높이
+  document.documentElement.style.setProperty('--cw', Math.round(64 * K) + 'px');
+  document.documentElement.style.setProperty('--ch', CH + 'px');
+  if (K < 1) document.documentElement.classList.add('small');
   const STALE_MS = 100 * 1000;
   const HIDE_OFFLINE_MS = 12 * 3600 * 1000;
   const ITEMS = ['💩', '⚾', '🐤', '💖', '🍌', '❄️', '🍙', '⭐'];
@@ -106,7 +111,7 @@
     if (Math.abs(c.vx) > 350) {
       for (const o of chars.values()) {
         if (o === c || o.dragging || o.el.style.display === 'none') continue;
-        if (Math.abs(o.x - c.x) < 34 && Math.abs(o.y - c.y) < 50 && now > (o.bumpAt || 0) + 800) {
+        if (Math.abs(o.x - c.x) < 34 * K + 6 && Math.abs(o.y - c.y) < 50 * K + 6 && now > (o.bumpAt || 0) + 800) {
           o.bumpAt = now; o.dizzyUntil = now + 1400; o.vx = c.vx * 0.5; o.vy = 380; o.airborne = true; o.target = null;
           c.vx *= -0.4; c.dizzyUntil = now + 1200;
         }
@@ -131,7 +136,7 @@
       const dx = (Math.random() - 0.5) * (opts.spread || 90);
       const up = 60 + Math.random() * (opts.rise || 70);
       p.style.left = c.x - 10 + 'px';
-      p.style.top = H - 105 - c.y + 'px';
+      p.style.top = H - CH - 37 - c.y + 'px';
       p.style.fontSize = (opts.size || 16) + Math.random() * 6 + 'px';
       p.style.setProperty('--dx', dx + 'px');
       p.style.setProperty('--up', -up + 'px');
@@ -262,7 +267,7 @@
       let ty = moving && c.frame === 'walk1' ? -2 : 0;
       let rot = 0;
       const sinceJump = now - c.jumpAt;
-      if (sinceJump < 500) ty -= Math.sin((sinceJump / 500) * Math.PI) * 26;
+      if (sinceJump < 500) ty -= Math.sin((sinceJump / 500) * Math.PI) * (12 + 14 * K);
       if (now < c.dizzyUntil) rot = Math.sin(now / 70) * 9;
       if (c.dragging) rot = Math.sin(now / 120) * 6;
       if (c.airborne && !c.dragging) rot = c.vx * 0.02;
@@ -399,13 +404,13 @@
     const H = window.innerHeight;
     if (fromC === toC) fromC = null;
     const sx = fromC ? fromC.x : (toC.x > W() / 2 ? 0 : W());
-    const sy = fromC ? H - 60 - fromC.y : H - 120;
+    const sy = fromC ? H - 4 - CH * 0.8 - fromC.y : H - 120;
     const start = performance.now();
     const dur = 750;
     const peak = 120 + Math.random() * 40;
     function step(t) {
       const k = Math.min(1, (t - start) / dur);
-      const ex = toC.x, ey = H - 70 - toC.y;
+      const ex = toC.x, ey = H - 4 - CH * 0.95 - toC.y;
       const x = sx + (ex - sx) * k;
       const y = sy + (ey - sy) * k - Math.sin(k * Math.PI) * peak;
       p.style.left = x - 12 + 'px';

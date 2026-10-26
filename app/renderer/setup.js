@@ -10,6 +10,7 @@
     display: prev.display || 0,
     autoStart: prev.autoStart !== false,
     customBroker: prev.customBroker || '',
+    size: [0.5, 0.75, 1].includes(prev.size) ? prev.size : 0.5,
   };
   let picked = !!prev.color;   // 사용자가 직접 색을 골랐는지
   let hover = null;            // 마우스를 올린 색 (임시 미리보기)
@@ -54,10 +55,12 @@
   setInterval(() => { frame++; renderPreview(); }, 260);
   function renderPos() {
     document.querySelectorAll('#pos button').forEach((b) => b.classList.toggle('on', b.dataset.v === state.position));
+    document.querySelectorAll('#size button').forEach((b) => b.classList.toggle('on', Number(b.dataset.v) === state.size));
   }
   function renderAll() { renderAnimals(); renderColors(); renderPreview(); renderPos(); }
 
   document.querySelectorAll('#pos button').forEach((b) => (b.onclick = () => { state.position = b.dataset.v; renderPos(); }));
+  document.querySelectorAll('#size button').forEach((b) => (b.onclick = () => { state.size = Number(b.dataset.v); renderPos(); }));
   const displays = await api.getDisplays();
   $('display').innerHTML = displays.map((d) => `<option value="${d.index}">${d.label}</option>`).join('');
   $('display').value = String(state.display);
@@ -84,7 +87,7 @@
     if (broker && !/^wss?:\/\//.test(broker)) return ($('err').textContent = '서버 주소는 wss:// 로 시작해야 합니다.');
     await api.saveConfig({
       name, animal: state.animal, color: state.color, groupCode: code, position: state.position,
-      display: Number($('display').value) || 0, autoStart: $('autoStart').checked, customBroker: broker, chatKey: $('chatKey').value,
+      display: Number($('display').value) || 0, autoStart: $('autoStart').checked, customBroker: broker, chatKey: $('chatKey').value, size: state.size,
     });
   };
   renderAll();

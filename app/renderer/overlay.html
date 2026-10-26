@@ -10,7 +10,7 @@
   #stage { position: absolute; inset: 0; }
   .char { position: absolute; bottom: 4px; width: 240px; margin-left: -120px; display: flex; flex-direction: column;
     align-items: center; pointer-events: none; will-change: transform, left; }
-  .char canvas { image-rendering: pixelated; width: 64px; height: 68px; pointer-events: auto; cursor: grab; touch-action: none;
+  .char canvas { image-rendering: pixelated; width: var(--cw, 32px); height: var(--ch, 34px); pointer-events: auto; cursor: grab; touch-action: none;
     filter: drop-shadow(0 2px 0 rgba(0,0,0,.18)); transition: filter .15s; }
   .char canvas:hover { filter: drop-shadow(0 0 4px rgba(255,255,255,.9)) drop-shadow(0 2px 0 rgba(0,0,0,.18)); }
   .char.offline canvas { opacity: .45; }
@@ -19,6 +19,7 @@
   .tag i { width: 6px; height: 6px; border-radius: 50%; background: #9aa0a6; display: inline-block; }
   .online .tag i { background: #2ecc71; }
   .away .tag i { background: #f5b301; }
+  .small .tag { font-size: 10px; padding: 0 6px 0 5px; }
   .char.me .tag { background: #2b2233; color: #fff; }
   .bubble { max-width: 210px; font-size: 12.5px; line-height: 1.35; color: #2b2233; background: #fff; border: 2px solid #2b2233;
     border-radius: 10px; padding: 5px 9px; margin-bottom: 6px; position: relative; word-break: break-all; white-space: pre-wrap;
@@ -27,16 +28,16 @@
   .bubble::after { content: ''; position: absolute; left: 50%; bottom: -7px; margin-left: -5px; width: 8px; height: 8px;
     background: #fff; border-right: 2px solid #2b2233; border-bottom: 2px solid #2b2233; transform: rotate(45deg); }
   .bubble.typing { letter-spacing: 2px; font-weight: 700; }
-  .fx { position: absolute; bottom: 50px; left: 50%; font-size: 12px; font-weight: 700; color: #6b5b95; pointer-events: none; white-space: nowrap; }
+  .fx { position: absolute; bottom: calc(var(--ch, 34px) * 0.74); left: 50%; font-size: 12px; font-weight: 700; color: #6b5b95; pointer-events: none; white-space: nowrap; }
   .zz { animation: zz 2.4s infinite ease-in-out; margin-left: 18px; }
   @keyframes zz { 0% { opacity: 0; transform: translate(0, 6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, -14px); } }
   .stars { margin-left: -16px; color: #f5b301; font-size: 14px; animation: spin .6s linear infinite; display: inline-block; }
-  .poop { position: absolute; left: -11px; bottom: 6px; font-size: 20px; animation: wob 1s ease-in-out infinite; }
+  .poop { position: absolute; left: calc(var(--ch, 34px) * -0.16); bottom: 4px; font-size: calc(var(--ch, 34px) * 0.22 + 6px); animation: wob 1s ease-in-out infinite; }
   .poop b { position: absolute; left: 4px; top: -14px; font-size: 11px; color: #7a8b3a; animation: zz 1.2s infinite; }
   @keyframes wob { 50% { transform: rotate(-8deg) translateY(-1px); } }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  #composer { position: absolute; bottom: 118px; width: 260px; margin-left: -130px; display: none; background: #fff;
+  #composer { position: absolute; bottom: calc(var(--ch, 34px) + 50px); width: 260px; margin-left: -130px; display: none; background: #fff;
     border: 2px solid #2b2233; border-radius: 12px; padding: 6px; box-shadow: 0 4px 0 rgba(43,34,51,.25); }
   #composer.show { display: flex; gap: 6px; }
   #composer input { flex: 1; border: none; outline: none; font: inherit; font-size: 13px; padding: 4px 6px; background: #fff8ef; border-radius: 6px; }

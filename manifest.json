@@ -1,6 +1,6 @@
 {
-  "version": "1.5.0",
-  "notes": "채팅 단축키가 Alt+` (숫자 1 왼쪽 키)로 바뀌었어요. 설정에서 변경 가능",
+  "version": "1.6.0",
+  "notes": "캐릭터 크기가 절반으로 작아졌어요. 설정에서 작게·중간·크게 선택 가능",
   "files": [
     {
       "path": "assets/icon.ico",
@@ -19,7 +19,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "0e62038c596c786d65b26e0cfad533c0b464966388e39c37c367036845990386",
+      "sha256": "79f5ae2496273622252e6e2b6ebedb94315c1f37b34b1c1014977981bf6cd3ce",
       "size": 192
     },
     {
@@ -44,23 +44,23 @@
     },
     {
       "path": "renderer/overlay.html",
-      "sha256": "5d50821885994b2390dccd720da680a17de245637eb1cefb07ae71216708068a",
-      "size": 6426
+      "sha256": "66940c2f7ed8a47cc69338dc0038eabc0dedb5155eeb4ea71fe94f213adbe3c7",
+      "size": 6606
     },
     {
       "path": "renderer/overlay.js",
-      "sha256": "72b7fdbb6583e24f40f274e06a6ed5d99a9bc8f5b18dfb594f693538c2f384b2",
-      "size": 23721
+      "sha256": "961c3e06bfdcaadf40db968239198b9b5a00b22a6a2a51f7bda455de646a7a5d",
+      "size": 24183
     },
     {
       "path": "renderer/setup.html",
-      "sha256": "39fe9a02e1addd11613c654d0ab11dcbcc696e4842560361160240b77cff5ed3",
-      "size": 6340
+      "sha256": "8eb17e7245bd113b1390d8a23b5ece7c25bd78dfdd97b90905e85cdaff833306",
+      "size": 6536
     },
     {
       "path": "renderer/setup.js",
-      "sha256": "b8e52138569ba06e366d218d3341f7c22ff16c5a64e97130901629f498cda5d5",
-      "size": 4503
+      "sha256": "8fbaa858a54fcedff4d2332face75e23d28b439f7ca84804fa69f4dbd412f09d",
+      "size": 4841
     },
     {
       "path": "renderer/sprites.js",
