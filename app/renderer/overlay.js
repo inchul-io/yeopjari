@@ -47,6 +47,111 @@
   const W = () => window.innerWidth;
   const rand = (a, b) => a + Math.random() * (b - a);
 
+  // ---------- 드래그로 옮기기 / 던지기 ----------
+  let clickTimer = null;
+  let drag = null;
+  const GRAVITY = 1800;
+  const groundY = () => window.innerHeight - 4;
+  function startDrag(c, e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    c.canvas.setPointerCapture(e.pointerId);
+    setIgnore(false);
+    drag = { c, id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false, hist: [], offY: groundY() - c.y - e.clientY };
+    c.canvas.onpointermove = (ev) => moveDrag(ev);
+    c.canvas.onpointerup = (ev) => endDrag(ev);
+    c.canvas.onpointercancel = (ev) => endDrag(ev);
+  }
+  function moveDrag(e) {
+    if (!drag) return;
+    const c = drag.c;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
+    if (!drag.moved) { drag.moved = true; c.dragging = true; c.airborne = false; c.target = null; hideMenu(); }
+    c.x = Math.max(40, Math.min(W() - 40, e.clientX));
+    c.y = Math.max(0, Math.min(window.innerHeight - 110, groundY() - e.clientY - drag.offY));
+    drag.hist.push({ x: c.x, y: c.y, t: performance.now() });
+    if (drag.hist.length > 6) drag.hist.shift();
+  }
+  function endDrag(e) {
+    if (!drag) return;
+    const c = drag.c;
+    try { c.canvas.releasePointerCapture(drag.id); } catch (err) {}
+    c.canvas.onpointermove = c.canvas.onpointerup = c.canvas.onpointercancel = null;
+    if (drag.moved) {
+      const h = drag.hist, a = h[0], b = h[h.length - 1];
+      const dt = a && b && b.t > a.t ? (b.t - a.t) / 1000 : 1;
+      c.vx = a ? Math.max(-1600, Math.min(1600, (b.x - a.x) / dt)) : 0;
+      c.vy = a ? Math.max(-1200, Math.min(1400, (b.y - a.y) / dt)) : 0;
+      c.dragging = false;
+      c.airborne = true;
+      c.pauseUntil = Date.now() + 15000;   // 놓은 자리에서 잠깐 쉬기
+    } else {
+      // 그냥 클릭: 더블클릭인지 잠깐 기다렸다가 메시지 창 열기
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => { hideMenu(); openComposer(); }, 260);
+    }
+    drag = null;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!composer.classList.contains('show') && !menu.classList.contains('show')) setIgnore(!(el && el.closest('.hit')));
+  }
+  function physics(c, dt, now) {
+    c.vy -= GRAVITY * dt;
+    c.x += c.vx * dt;
+    c.y += c.vy * dt;
+    if (c.x < 40) { c.x = 40; c.vx = Math.abs(c.vx) * 0.6; }
+    if (c.x > W() - 40) { c.x = W() - 40; c.vx = -Math.abs(c.vx) * 0.6; }
+    const top = window.innerHeight - 110;
+    if (c.y > top) { c.y = top; c.vy = -Math.abs(c.vy) * 0.3; }
+    // 날아가다 다른 캐릭터와 부딪히면 둘 다 어질어질
+    if (Math.abs(c.vx) > 350) {
+      for (const o of chars.values()) {
+        if (o === c || o.dragging || o.el.style.display === 'none') continue;
+        if (Math.abs(o.x - c.x) < 34 && Math.abs(o.y - c.y) < 50 && now > (o.bumpAt || 0) + 800) {
+          o.bumpAt = now; o.dizzyUntil = now + 1400; o.vx = c.vx * 0.5; o.vy = 380; o.airborne = true; o.target = null;
+          c.vx *= -0.4; c.dizzyUntil = now + 1200;
+        }
+      }
+    }
+    if (c.y <= 0) {
+      c.y = 0;
+      const impact = -c.vy;
+      if (impact > 260) { c.vy = impact * 0.42; c.vx *= 0.7; if (impact > 900) c.dizzyUntil = now + 1300; }
+      else { c.vy = 0; c.vx *= 0.8; if (Math.abs(c.vx) < 30) { c.airborne = false; c.vx = 0; } }
+    }
+  }
+
+  // ---------- 더블클릭 효과 ----------
+  const EMOTES = ['hearts', 'spin', 'surprise', 'music', 'sparkle', 'flip', 'laugh'];
+  function burst(c, emojis, n, opts = {}) {
+    const H = window.innerHeight;
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('div');
+      p.className = 'pt';
+      p.textContent = emojis[i % emojis.length];
+      const dx = (Math.random() - 0.5) * (opts.spread || 90);
+      const up = 60 + Math.random() * (opts.rise || 70);
+      p.style.left = c.x - 10 + 'px';
+      p.style.top = H - 105 - c.y + 'px';
+      p.style.fontSize = (opts.size || 16) + Math.random() * 6 + 'px';
+      p.style.setProperty('--dx', dx + 'px');
+      p.style.setProperty('--up', -up + 'px');
+      p.style.animationDelay = i * (opts.stagger || 60) + 'ms';
+      stage.appendChild(p);
+      setTimeout(() => p.remove(), 1500 + i * (opts.stagger || 60));
+    }
+  }
+  function playEmote(c, kind) {
+    const now = Date.now();
+    c.emote = kind; c.emoteAt = now; c.target = null;
+    if (kind === 'hearts') { c.jumpAt = now; burst(c, ['💕', '💖', '💗'], 7); }
+    if (kind === 'spin') burst(c, ['💫'], 3);
+    if (kind === 'surprise') { c.jumpAt = now; burst(c, ['❗'], 1, { spread: 0, rise: 20, size: 24 }); }
+    if (kind === 'music') burst(c, ['🎵', '🎶'], 6, { stagger: 180 });
+    if (kind === 'sparkle') burst(c, ['✨', '⭐'], 8, { spread: 130 });
+    if (kind === 'flip') { c.jumpAt = now; burst(c, ['💨'], 2, { spread: 40, rise: 10 }); }
+    if (kind === 'laugh') burst(c, ['ㅋ', 'ㅋㅋ', 'ㅋ'], 6, { stagger: 120, size: 13 });
+  }
+
   function makeChar(p) {
     const el = document.createElement('div');
     el.className = 'char';
@@ -60,10 +165,15 @@
       bubble: el.querySelector('.bubble'), tag: el.querySelector('.tag span'), fx: el.querySelector('.fx'),
       x: rand(60, Math.max(80, W() - 60)), target: null, pauseUntil: 0, speed: rand(16, 28),
       frame: 'stand', lastStep: 0, drawn: '', bubbleUntil: 0, typingUntil: 0, dizzyUntil: 0, poopUntil: 0, jumpAt: 0,
+      y: 0, vx: 0, vy: 0, dragging: false, airborne: false, emote: null, emoteAt: 0,
       seenAt: Date.now(),
     };
-    canvas.addEventListener('click', () => { hideMenu(); openComposer(); });
-    canvas.addEventListener('dblclick', () => { if (c.id !== cfg.userId) sendEvent({ t: 'hi', to: c.id }); });
+    canvas.addEventListener('pointerdown', (e) => startDrag(c, e));
+    canvas.addEventListener('dblclick', () => {
+      clearTimeout(clickTimer);
+      if (c.id === cfg.userId) sendEvent({ t: 'emote', kind: EMOTES[Math.floor(Math.random() * EMOTES.length)] });
+      else sendEvent({ t: 'hi', to: c.id });
+    });
     canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); showMenu(c, e.clientX, e.clientY); });
     chars.set(p.id, c);
     return c;
@@ -117,7 +227,9 @@
 
       let eyes = 'open';
       let moving = false;
-      const busy = now < c.bubbleUntil || now < c.typingUntil || c.id === composerOwner;
+      if (c.airborne && !c.dragging) physics(c, dt, now);
+      const busy = now < c.bubbleUntil || now < c.typingUntil || c.id === composerOwner || c.dragging || c.airborne
+        || now - c.emoteAt < 2000;
       if (st === 'online' && !busy && now > c.dizzyUntil) {
         if (c.target == null && now > c.pauseUntil) c.target = rand(60, Math.max(80, W() - 60));
         if (c.target != null) {
@@ -128,7 +240,10 @@
         }
       }
       c.x = Math.max(40, Math.min(W() - 40, c.x));
-      if (moving) {
+      if (c.dragging) {
+        // 들려 있을 때: 다리 버둥버둥
+        if (t - c.lastStep > 90) { c.frame = c.frame === 'walk1' ? 'walk2' : 'walk1'; c.lastStep = t; }
+      } else if (moving) {
         if (t - c.lastStep > 220) { c.frame = c.frame === 'walk1' ? 'walk2' : 'walk1'; c.lastStep = t; }
       } else c.frame = 'stand';
       if (st === 'away') eyes = 'half';
@@ -139,6 +254,8 @@
       if (st === 'away') fx = '<span class="zz">z</span>';
       if (st === 'offline') fx = '<span class="zz">Zz</span>';
       if (now < c.dizzyUntil) { fx = '<span class="stars">✦ ✧</span>'; eyes = 'closed'; }
+      if (c.dragging) fx = '<span class="lift">!</span>';
+      if ((c.emote === 'laugh' || c.emote === 'hearts') && now - c.emoteAt < 1500) eyes = 'half';
       if (now < c.poopUntil) fx += '<span class="poop">💩<b>~</b></span>';
       if (c.fx.dataset.k !== fx) { c.fx.innerHTML = fx; c.fx.dataset.k = fx; }
 
@@ -147,8 +264,25 @@
       const sinceJump = now - c.jumpAt;
       if (sinceJump < 500) ty -= Math.sin((sinceJump / 500) * Math.PI) * 26;
       if (now < c.dizzyUntil) rot = Math.sin(now / 70) * 9;
+      if (c.dragging) rot = Math.sin(now / 120) * 6;
+      if (c.airborne && !c.dragging) rot = c.vx * 0.02;
+      const se = now - c.emoteAt;
+      if (c.emote === 'spin' && se < 700) rot = (se / 700) * 360;
+      if (c.emote === 'flip' && se < 500) rot = -(se / 500) * 360;
+      if (c.emote === 'music' && se < 2000) { rot = Math.sin(se / 90) * 12; ty -= Math.abs(Math.sin(se / 180)) * 6; }
+      if (c.emote === 'laugh' && se < 1500) ty -= Math.abs(Math.sin(se / 60)) * 3;
+      if (c.emote === 'surprise' && se < 400) ty -= 6;
+      ty -= c.y;
       c.el.style.left = c.x + 'px';
-      c.el.style.transform = `translateY(${ty}px) rotate(${rot}deg)`;
+      if (c.bubble.classList.contains('show')) {
+        const bw = c.bubble.offsetWidth;
+        let sh = 0;
+        if (c.x - bw / 2 < 4) sh = 4 + bw / 2 - c.x;
+        else if (c.x + bw / 2 > W() - 4) sh = W() - 4 - bw / 2 - c.x;
+        c.bubble.style.marginLeft = sh * 2 + 'px';
+      }
+      c.el.style.transform = `translateY(${ty}px)`;
+      c.canvas.style.transform = rot ? `rotate(${rot}deg)` : '';
       drawChar(c, eyes);
 
       // 말풍선 / 입력 중
@@ -170,7 +304,7 @@
   let ignoring = true;
   function setIgnore(v) { if (v !== ignoring) { ignoring = v; api.setIgnore(v); } }
   window.addEventListener('mousemove', (e) => {
-    if (composer.classList.contains('show') || menu.classList.contains('show')) return setIgnore(false);
+    if (drag || composer.classList.contains('show') || menu.classList.contains('show')) return setIgnore(false);
     const el = document.elementFromPoint(e.clientX, e.clientY);
     setIgnore(!(el && el.closest('.hit')));
   });
@@ -224,22 +358,26 @@
     const isMe = c.id === cfg.userId;
     menu.innerHTML = isMe
       ? `<div class="title">나 (${esc(c.name)})</div><div class="grid">
-           <button class="wide" data-a="write">✏️ 메시지 쓰기</button>
-           <button class="wide" data-a="history">🕘 최근 대화</button>
-           <button class="wide" data-a="setup">⚙️ 설정</button></div>`
+           <button class="act" data-a="write">✏️<small>메시지</small></button>
+           <button class="act" data-a="emote">🎉<small>효과</small></button>
+           <button class="act" data-a="history">🕘<small>대화기록</small></button>
+           <button class="act" data-a="setup">⚙️<small>설정</small></button>
+           <div class="sub">나한테 던져보기</div>
+           ${ITEMS.map((i) => `<button data-item="${i}">${i}</button>`).join('')}</div>`
       : `<div class="title">${esc(c.name)}에게</div><div class="grid">
            ${ITEMS.map((i) => `<button data-item="${i}">${i}</button>`).join('')}
            <button class="wide" data-a="hi">👋 인사하기</button></div>`;
     menu.classList.add('show');
     const r = menu.getBoundingClientRect();
     menu.style.left = Math.max(4, Math.min(W() - r.width - 4, x - r.width / 2)) + 'px';
-    menu.style.top = Math.max(4, y - r.height - 12) + 'px';
+    menu.style.top = Math.max(2, Math.min(window.innerHeight - r.height - 2, y - r.height - 12)) + 'px';
     setIgnore(false);
     menu.onclick = (e) => {
       const b = e.target.closest('button');
       if (!b) return;
       if (b.dataset.item) sendEvent({ t: 'throw', to: c.id, item: b.dataset.item });
       if (b.dataset.a === 'hi') sendEvent({ t: 'hi', to: c.id });
+      if (b.dataset.a === 'emote') sendEvent({ t: 'emote', kind: EMOTES[Math.floor(Math.random() * EMOTES.length)] });
       if (b.dataset.a === 'write') { hideMenu(); return openComposer(); }
       if (b.dataset.a === 'history') api.openHistory();
       if (b.dataset.a === 'setup') api.openSetup();
@@ -259,14 +397,15 @@
     p.textContent = item;
     stage.appendChild(p);
     const H = window.innerHeight;
+    if (fromC === toC) fromC = null;
     const sx = fromC ? fromC.x : (toC.x > W() / 2 ? 0 : W());
-    const sy = H - 60;
+    const sy = fromC ? H - 60 - fromC.y : H - 120;
     const start = performance.now();
     const dur = 750;
     const peak = 120 + Math.random() * 40;
     function step(t) {
       const k = Math.min(1, (t - start) / dur);
-      const ex = toC.x, ey = H - 70;
+      const ex = toC.x, ey = H - 70 - toC.y;
       const x = sx + (ex - sx) * k;
       const y = sy + (ey - sy) * k - Math.sin(k * Math.PI) * peak;
       p.style.left = x - 12 + 'px';
@@ -363,6 +502,9 @@
       if (from) from.jumpAt = Date.now();
       if (to) setTimeout(() => { to.jumpAt = Date.now(); }, 450);
       if (from && to) say(from, `👋 ${to.name}님 안녕!`, 3500);
+      if (to) setTimeout(() => burst(to, ['💕', '👋', '💖'], 5), 450);
+    } else if (ev.t === 'emote' && from && EMOTES.includes(ev.kind)) {
+      playEmote(from, ev.kind);
     }
   }
 
@@ -381,6 +523,12 @@
 
   upsertPresence(myPresence(myStatus), Date.now());
   client.start();
+  try {
+    if (!localStorage.getItem('tip-v14')) {
+      localStorage.setItem('tip-v14', '1');
+      setTimeout(() => { const me = chars.get(cfg.userId); if (me) say(me, '클릭 → 메시지\n더블클릭 → 효과\n드래그 → 옮기기·던지기\n우클릭 → 물건 던지기', 12000); }, 3500);
+    }
+  } catch (e) {}
   requestAnimationFrame(tick);
   window.__yeop = { chars, sendEvent, sendMessage, openComposer }; // 테스트용
 })();
