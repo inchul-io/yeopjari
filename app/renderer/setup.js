@@ -61,6 +61,11 @@
   const displays = await api.getDisplays();
   $('display').innerHTML = displays.map((d) => `<option value="${d.index}">${d.label}</option>`).join('');
   $('display').value = String(state.display);
+  const ck = await api.getChatKeys();
+  $('chatKey').innerHTML = ck.keys.map((k) => `<option value="${k.key}">${k.label}</option>`).join('');
+  $('chatKey').value = prev.chatKey || ck.current;
+  const warn = () => { $('keyWarn').style.display = $('chatKey').value === 'Alt+Enter' ? 'block' : 'none'; };
+  $('chatKey').onchange = warn; warn();
   $('name').value = state.name;
   $('code').value = state.groupCode;
   $('autoStart').checked = state.autoStart;
@@ -79,7 +84,7 @@
     if (broker && !/^wss?:\/\//.test(broker)) return ($('err').textContent = '서버 주소는 wss:// 로 시작해야 합니다.');
     await api.saveConfig({
       name, animal: state.animal, color: state.color, groupCode: code, position: state.position,
-      display: Number($('display').value) || 0, autoStart: $('autoStart').checked, customBroker: broker,
+      display: Number($('display').value) || 0, autoStart: $('autoStart').checked, customBroker: broker, chatKey: $('chatKey').value,
     });
   };
   renderAll();

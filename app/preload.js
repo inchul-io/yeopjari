@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('yeop', {
   saveConfig: (c) => ipcRenderer.invoke('save-config', c),
   newCode: () => ipcRenderer.invoke('new-code'),
   getDisplays: () => ipcRenderer.invoke('get-displays'),
+  getChatKeys: () => ipcRenderer.invoke('get-chat-keys'),
   getHistory: () => ipcRenderer.invoke('get-history'),
   addHistory: (entry) => ipcRenderer.send('add-history', entry),
   setIgnore: (v) => ipcRenderer.send('set-ignore', v),

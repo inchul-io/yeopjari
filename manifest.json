@@ -1,6 +1,6 @@
 {
-  "version": "1.4.0",
-  "notes": "드래그로 옮기기·던지기, 더블클릭 효과 7종 추가",
+  "version": "1.5.0",
+  "notes": "채팅 단축키가 Alt+` (숫자 1 왼쪽 키)로 바뀌었어요. 설정에서 변경 가능",
   "files": [
     {
       "path": "assets/icon.ico",
@@ -14,18 +14,18 @@
     },
     {
       "path": "main.js",
-      "sha256": "452f55857e4303c136abfefcff88b4d81f390fa8b9b200d7c9befbfa84711bf9",
-      "size": 10783
+      "sha256": "64198a05d6d0ab4256e436346691614bb8128e062064dba036a0f4b56d6eae24",
+      "size": 12168
     },
     {
       "path": "package.json",
-      "sha256": "b07fca91216cd6f579fc298f80873e0f9d8f378eed536013573fd292ac7e1736",
+      "sha256": "0e62038c596c786d65b26e0cfad533c0b464966388e39c37c367036845990386",
       "size": 192
     },
     {
       "path": "preload.js",
-      "sha256": "c061b9e0db612f942fd75089c12442ab638643193851ce229ab8612d6f8323c7",
-      "size": 965
+      "sha256": "74aa878f2ac51bac2a526d1f2fdc4041b3e85749684cbe522626faf4e26713e4",
+      "size": 1023
     },
     {
       "path": "renderer/history.html",
@@ -49,18 +49,18 @@
     },
     {
       "path": "renderer/overlay.js",
-      "sha256": "312b624d983b4427d170dab0c0bf190b580e1caf49e2ab3a218b8c583e54a0ae",
-      "size": 23618
+      "sha256": "72b7fdbb6583e24f40f274e06a6ed5d99a9bc8f5b18dfb594f693538c2f384b2",
+      "size": 23721
     },
     {
       "path": "renderer/setup.html",
-      "sha256": "220a9476f9ad9a68030a3ca1f28657d4565a2acf4f8aca00d1518b5a033fddab",
-      "size": 5896
+      "sha256": "39fe9a02e1addd11613c654d0ab11dcbcc696e4842560361160240b77cff5ed3",
+      "size": 6340
     },
     {
       "path": "renderer/setup.js",
-      "sha256": "458800c904377879f32874524ca1768723bba3469373fd82a32c742066746bd5",
-      "size": 4131
+      "sha256": "b8e52138569ba06e366d218d3341f7c22ff16c5a64e97130901629f498cda5d5",
+      "size": 4503
     },
     {
       "path": "renderer/sprites.js",

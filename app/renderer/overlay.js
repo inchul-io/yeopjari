@@ -509,7 +509,10 @@
   }
 
   // ---------- 메인 프로세스 연동 ----------
-  api.onOpenInput(() => openComposer());
+  api.onOpenInput((mode) => {
+    if (mode === 'toggle' && composer.classList.contains('show')) closeComposer();
+    else openComposer();
+  });
   api.onQuiet((v) => { quiet = v; });
   api.onMyStatus((s) => { myStatus = s; publishPresence(); });
   api.onSendText((text) => sendMessage(text));

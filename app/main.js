@@ -16,6 +16,16 @@ const ICON = path.join(__dirname, 'assets', 'icon.png');
 const OVERLAY_H = 260;
 const HISTORY_DAYS = 7;
 
+// 채팅 단축키 후보 (앞에서부터 기본값 → 등록 실패 시 다음 후보로)
+const CHAT_KEYS = [
+  { key: 'Alt+`', label: 'Alt + `  (숫자 1 왼쪽 키)' },
+  { key: 'Control+Alt+Enter', label: 'Ctrl + Alt + Enter' },
+  { key: 'Control+Alt+Space', label: 'Ctrl + Alt + Space' },
+  { key: 'Alt+Enter', label: 'Alt + Enter  (⚠ 엑셀 셀 줄바꿈 안 됨)' },
+];
+const keyLabel = (k) => (CHAT_KEYS.find((c) => c.key === k) || { label: k }).label.replace(/\s*\(.*\)/, '').replace(/ \+ /g, '+');
+let chatKey = null;
+
 const DEFAULT_BROKERS = [
   'wss://broker.emqx.io:8084/mqtt',
   'wss://broker.hivemq.com:8884/mqtt',
@@ -145,7 +155,7 @@ function buildTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: `${config.name} · 그룹 ${config.groupCode}`, enabled: false },
     { type: 'separator' },
-    { label: '메시지 쓰기\tCtrl+Alt+Space', click: () => sendOverlay('open-input') },
+    { label: `메시지 쓰기\t${chatKey ? keyLabel(chatKey) : ''}`, click: () => sendOverlay('open-input') },
     { label: '최근 대화 보기', click: openHistory },
     { label: '조용히 모드 (말풍선 내용 숨김)', type: 'checkbox', checked: quiet, click: (i) => setQuiet(i.checked) },
     { label: '캐릭터 숨기기\tCtrl+Alt+H', type: 'checkbox', checked: hidden, click: (i) => setHidden(i.checked) },
@@ -182,8 +192,26 @@ function setStatus(s) {
   sendOverlay('my-status', s);
 }
 
+function registerChatKey() {
+  if (chatKey) { try { globalShortcut.unregister(chatKey); } catch (e) {} }
+  chatKey = null;
+  const wanted = config.chatKey || CHAT_KEYS[0].key;
+  const order = [wanted, ...CHAT_KEYS.map((c) => c.key).filter((k) => k !== wanted)];
+  for (const k of order) {
+    let ok = false;
+    try { ok = globalShortcut.register(k, () => sendOverlay('open-input', 'toggle')); } catch (e) { ok = false; }
+    if (ok) {
+      chatKey = k;
+      if (k !== wanted) notify(`${keyLabel(wanted)}는 다른 프로그램이 쓰고 있어서 ${keyLabel(k)}로 바꿨어요. 설정에서 변경할 수 있어요.`);
+      return;
+    }
+  }
+  notify('채팅 단축키를 등록하지 못했어요. 캐릭터를 클릭해서 채팅할 수 있어요.');
+}
+
 function startApp() {
   quiet = !!config.quiet;
+  registerChatKey();
   createOverlay();
   buildTray();
   try { app.setLoginItemSettings({ openAtLogin: !!config.autoStart }); } catch (e) {}
@@ -205,6 +233,7 @@ async function runUpdate(manual) {
 
 // ---------- IPC ----------
 ipcMain.handle('get-config', () => (config ? { ...config, brokers: brokersOf(config), quiet, myStatus } : null));
+ipcMain.handle('get-chat-keys', () => ({ keys: CHAT_KEYS, current: chatKey || config && config.chatKey || CHAT_KEYS[0].key }));
 ipcMain.handle('get-displays', () => screen.getAllDisplays().map((d, i) => ({
   index: i, label: `모니터 ${i + 1}${d.id === screen.getPrimaryDisplay().id ? ' (주 모니터)' : ''} · ${d.size.width}x${d.size.height}`,
 })));
@@ -242,7 +271,6 @@ app.whenReady().then(() => {
   config = loadConfig();
   if (config) startApp(); else openSetup();
 
-  globalShortcut.register('Control+Alt+Space', () => sendOverlay('open-input'));
   globalShortcut.register('Control+Alt+H', () => setHidden(!hidden));
 
   // 자리 비움 감지: 5분 동안 입력이 없거나 화면 잠금이면 '조는 중'
