@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+<title>옆자리 설정</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff8ef; color: #2b2233; font-family: "Malgun Gothic", "맑은 고딕", sans-serif; font-size: 13px; }
+  .wrap { padding: 22px 26px 18px; }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  .sub { color: #7a6f80; margin: 0 0 16px; }
+  label.h { display: block; font-weight: 700; margin: 12px 0 5px; }
+  input[type=text] { width: 100%; padding: 9px 10px; border: 2px solid #2b2233; border-radius: 8px; font: inherit; font-size: 14px; background: #fff; }
+  .animals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .animal { border: 2px solid #e6dccd; background: #fff; border-radius: 10px; padding: 4px 0 3px; text-align: center; cursor: pointer; font-size: 12px; }
+  .animal.on { border-color: #2b2233; background: #fff1d6; }
+  .animal canvas { image-rendering: pixelated; width: 40px; height: 42.5px; display: block; margin: 0 auto 2px; }
+  .colors { display: flex; gap: 5px; flex-wrap: wrap; }
+  .color { width: 28px; height: 28px; border-radius: 8px; border: 2px solid #e6dccd; cursor: pointer; }
+  .color.on { border-color: #2b2233; box-shadow: 0 0 0 2px #fff8ef inset; }
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; text-transform: uppercase; letter-spacing: 1px; }
+  button { font: inherit; cursor: pointer; }
+  .ghost { border: 2px solid #2b2233; background: #fff; border-radius: 8px; padding: 0 12px; font-weight: 700; white-space: nowrap; }
+  .seg { display: flex; border: 2px solid #2b2233; border-radius: 8px; overflow: hidden; }
+  .seg button { flex: 1; border: none; background: #fff; padding: 8px 0; font-weight: 700; }
+  .seg button + button { border-left: 2px solid #2b2233; }
+  .seg button.on { background: #2b2233; color: #fff; }
+  select { width: 100%; padding: 8px; border: 2px solid #2b2233; border-radius: 8px; font: inherit; background: #fff; }
+  .hint { color: #7a6f80; font-size: 12px; margin-top: 5px; }
+  details { margin-top: 14px; }
+  summary { cursor: pointer; font-weight: 700; color: #6b5b95; }
+  .check { display: flex; align-items: center; gap: 6px; margin-top: 14px; }
+  .save { width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 10px; background: #2b2233; color: #fff; font-size: 15px; font-weight: 700; }
+  .err { color: #d1495b; font-weight: 700; margin-top: 8px; min-height: 16px; }
+  .colorbox { display: flex; gap: 12px; align-items: stretch; }
+  .pvbox { flex: 0 0 104px; background: #fff; border: 2px solid #2b2233; border-radius: 12px; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end; padding: 6px 0 4px; position: relative; overflow: hidden; }
+  .pvbox::before { content: '미리보기'; position: absolute; top: 4px; left: 0; right: 0; text-align: center; font-size: 10px; color: #a39aa8; font-weight: 700; }
+  .pvbox canvas { image-rendering: pixelated; width: 64px; height: 68px; margin-top: 12px; }
+  .pvbox .nm { font-size: 11px; font-weight: 700; background: #2b2233; color: #fff; border-radius: 8px; padding: 1px 8px; margin-top: 2px; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .colorside { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .reset { align-self: flex-start; border: none; background: none; color: #6b5b95; font-weight: 700; font-size: 12px; padding: 0; text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>옆자리</h1>
+  <p class="sub">동료들이 화면 아래에서 총총 걸어다니는 사내 메신저</p>
+
+  <label class="h">이름 (동료들에게 보이는 이름)</label>
+  <input type="text" id="name" maxlength="10" placeholder="예: 양인철">
+
+  <label class="h">캐릭터</label>
+  <div class="animals" id="animals"></div>
+
+  <label class="h">색깔 <span style="font-weight:400;color:#7a6f80">(색에 마우스를 올리면 바로 미리보기 · 클릭하면 모든 캐릭터에 적용)</span></label>
+  <div class="colorbox">
+    <div class="pvbox"><canvas id="pv" width="64" height="68"></canvas><div class="nm" id="pvname">나</div></div>
+    <div class="colorside">
+      <div class="colors" id="colors"></div>
+      <button class="reset" id="reset">↺ 캐릭터별 추천 색으로 되돌리기</button>
+    </div>
+  </div>
+
+  <label class="h">그룹 코드</label>
+  <div class="row">
+    <input type="text" id="code" placeholder="YP-XXXX-XXXX">
+    <button class="ghost" id="gen">새 그룹 만들기</button>
+  </div>
+  <div class="hint">같은 코드를 넣은 사람끼리만 서로 보입니다. 처음 만드는 사람이 코드를 만들어 동료에게 공유하세요.</div>
+
+  <label class="h">캐릭터가 다닐 위치</label>
+  <div class="seg" id="pos">
+    <button data-v="full">화면 전체</button><button data-v="left">왼쪽</button><button data-v="center">가운데</button><button data-v="right">오른쪽</button>
+  </div>
+
+  <label class="h">표시할 모니터</label>
+  <select id="display"></select>
+
+  <label class="check"><input type="checkbox" id="autoStart" checked> 윈도우 켤 때 자동 실행</label>
+
+  <details>
+    <summary>고급: 연결 서버 (회사 방화벽에서 연결이 안 될 때만)</summary>
+    <input type="text" id="broker" placeholder="wss://주소:포트/mqtt (비워두면 기본 무료 서버 사용)" style="margin-top:8px">
+    <div class="hint">대화 내용은 그룹 코드로 암호화되어 서버 운영자도 읽을 수 없습니다.</div>
+  </details>
+
+  <div class="err" id="err"></div>
+  <button class="save" id="save">시작하기</button>
+</div>
+<script src="sprites.js"></script>
+<script src="setup.js"></script>
+</body>
+</html>

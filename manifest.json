@@ -1,0 +1,76 @@
+{
+  "version": "1.3.0",
+  "notes": "자동 업데이트 기능이 추가됐어요",
+  "files": [
+    {
+      "path": "assets/icon.ico",
+      "sha256": "14e33a6d3485db01b6852594baa1e8743790819d3d420a9f168c3ef16abb6094",
+      "size": 19808
+    },
+    {
+      "path": "assets/icon.png",
+      "sha256": "5241940dafa771a38ab836e11c1bab41d476f87275443436ab87dd4f2d55e4f0",
+      "size": 5131
+    },
+    {
+      "path": "main.js",
+      "sha256": "dd7c2ef7e0a04cad8b78bbd91f6ca4f658ddf7d8a4a5b2ff4a6e02bd38fd3def",
+      "size": 10762
+    },
+    {
+      "path": "package.json",
+      "sha256": "f3739d6a4576f24118aadc53a60ebb02bd17dccaf0795057d7016b4439ed6145",
+      "size": 192
+    },
+    {
+      "path": "preload.js",
+      "sha256": "c061b9e0db612f942fd75089c12442ab638643193851ce229ab8612d6f8323c7",
+      "size": 965
+    },
+    {
+      "path": "renderer/history.html",
+      "sha256": "0bccf5a7149c7ec50e3d98afec333aff9526405b88e00d543b3c78e795e8effc",
+      "size": 1974
+    },
+    {
+      "path": "renderer/history.js",
+      "sha256": "ae5c8169f250dc23912a54ab87c2525fab0afd121093ef5944ab917060a21df5",
+      "size": 1315
+    },
+    {
+      "path": "renderer/mqtt-lite.js",
+      "sha256": "31381be1870eeb8a831efe58fc340dddb8c17a35124e3bc350e5fb403a11ba7f",
+      "size": 5473
+    },
+    {
+      "path": "renderer/overlay.html",
+      "sha256": "8354d69ed47ead55aea2c6ed0dba53142dd9ba5dc7e915cfacaefe2c0f0df8bf",
+      "size": 5375
+    },
+    {
+      "path": "renderer/overlay.js",
+      "sha256": "a2cbd5e601b0f29bfaf3919a899110347f5cd5fdcf85ff4809b87f1221f83f37",
+      "size": 16110
+    },
+    {
+      "path": "renderer/setup.html",
+      "sha256": "220a9476f9ad9a68030a3ca1f28657d4565a2acf4f8aca00d1518b5a033fddab",
+      "size": 5896
+    },
+    {
+      "path": "renderer/setup.js",
+      "sha256": "458800c904377879f32874524ca1768723bba3469373fd82a32c742066746bd5",
+      "size": 4131
+    },
+    {
+      "path": "renderer/sprites.js",
+      "sha256": "f1ca4c82eeda56ef16cffaae2f98fd0ad5e77775c78fb60b5c243df8a58d07b8",
+      "size": 7329
+    },
+    {
+      "path": "updater.js",
+      "sha256": "8b67095c95d3e145cb3a888cfa3bd146a0b3c834572817b3252cd7c95a18f7a1",
+      "size": 3176
+    }
+  ]
+}
