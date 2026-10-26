@@ -1,6 +1,6 @@
 {
-  "version": "1.3.0",
-  "notes": "자동 업데이트 기능이 추가됐어요",
+  "version": "1.3.1",
+  "notes": "트레이 아이콘에 버전 표시",
   "files": [
     {
       "path": "assets/icon.ico",
@@ -14,12 +14,12 @@
     },
     {
       "path": "main.js",
-      "sha256": "dd7c2ef7e0a04cad8b78bbd91f6ca4f658ddf7d8a4a5b2ff4a6e02bd38fd3def",
-      "size": 10762
+      "sha256": "452f55857e4303c136abfefcff88b4d81f390fa8b9b200d7c9befbfa84711bf9",
+      "size": 10783
     },
     {
       "path": "package.json",
-      "sha256": "f3739d6a4576f24118aadc53a60ebb02bd17dccaf0795057d7016b4439ed6145",
+      "sha256": "a19f938824799feeb394174b9cf273b666b5d735e51fc126ff998ec48749a0fd",
       "size": 192
     },
     {

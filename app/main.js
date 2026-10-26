@@ -139,7 +139,7 @@ function openHistory() {
 function buildTray() {
   if (!tray) {
     tray = new Tray(nativeImage.createFromPath(ICON).resize({ width: 16, height: 16 }));
-    tray.setToolTip('옆자리');
+    tray.setToolTip(`옆자리 v${app.getVersion()}`);
     tray.on('click', () => sendOverlay('open-input'));
   }
   tray.setContextMenu(Menu.buildFromTemplate([
