@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
-  "notes": "캐릭터 크기가 절반으로 작아졌어요. 설정에서 작게·중간·크게 선택 가능",
+  "version": "1.6.1",
+  "notes": "절전 후 연결이 끊기던 문제를 고쳤어요",
   "files": [
     {
       "path": "assets/icon.ico",
@@ -14,18 +14,18 @@
     },
     {
       "path": "main.js",
-      "sha256": "64198a05d6d0ab4256e436346691614bb8128e062064dba036a0f4b56d6eae24",
-      "size": 12168
+      "sha256": "8cba170c120674c35ff60e38925247ecb8e26992ae2202d6e987762240ac92bb",
+      "size": 12298
     },
     {
       "path": "package.json",
-      "sha256": "79f5ae2496273622252e6e2b6ebedb94315c1f37b34b1c1014977981bf6cd3ce",
+      "sha256": "d8ba6afb8c152532becfb716efc5c737885be8527ee4a67065d56fa008693dc2",
       "size": 192
     },
     {
       "path": "preload.js",
-      "sha256": "74aa878f2ac51bac2a526d1f2fdc4041b3e85749684cbe522626faf4e26713e4",
-      "size": 1023
+      "sha256": "02fe69806b671a9fedb09c3abd305b4bbe06d0a5ea8a3101d94969b72fb60430",
+      "size": 1077
     },
     {
       "path": "renderer/history.html",
@@ -39,8 +39,8 @@
     },
     {
       "path": "renderer/mqtt-lite.js",
-      "sha256": "31381be1870eeb8a831efe58fc340dddb8c17a35124e3bc350e5fb403a11ba7f",
-      "size": 5473
+      "sha256": "5efa82952fa029aafc082786e9ccde20d5b51f74e1c5143c2bae848af78424d5",
+      "size": 6264
     },
     {
       "path": "renderer/overlay.html",
@@ -49,8 +49,8 @@
     },
     {
       "path": "renderer/overlay.js",
-      "sha256": "961c3e06bfdcaadf40db968239198b9b5a00b22a6a2a51f7bda455de646a7a5d",
-      "size": 24183
+      "sha256": "0255916152a1c3bf5998f665aaac6576be4edc2e416765accdeb203c8027f6ff",
+      "size": 25277
     },
     {
       "path": "renderer/setup.html",

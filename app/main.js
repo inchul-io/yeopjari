@@ -278,8 +278,9 @@ app.whenReady().then(() => {
     try { setStatus(powerMonitor.getSystemIdleTime() >= 300 ? 'away' : 'online'); } catch (e) {}
   }, 15000);
   powerMonitor.on('lock-screen', () => setStatus('away'));
-  powerMonitor.on('unlock-screen', () => setStatus('online'));
-  powerMonitor.on('suspend', () => sendOverlay('going-offline'));
+  powerMonitor.on('unlock-screen', () => { setStatus('online'); sendOverlay('resume'); });
+  powerMonitor.on('suspend', () => sendOverlay('suspend'));
+  powerMonitor.on('resume', () => { setStatus('online'); setTimeout(() => sendOverlay('resume'), 3000); });
 
   // 다른 창에 가려지지 않도록 주기적으로 맨 위 유지
   setInterval(() => {

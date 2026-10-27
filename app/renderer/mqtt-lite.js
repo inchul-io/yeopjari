@@ -38,9 +38,25 @@
       this.retry = 0;
       this.closedByUser = false;
       this.pid = 1;
+      this.lastRx = 0;
     }
 
     start() { this.closedByUser = false; this._open(); }
+
+    // 절전 해제·네트워크 변경 후: 기존 연결을 버리고 첫 서버부터 새로 연결
+    restart() {
+      clearInterval(this.pingTimer);
+      clearTimeout(this.retryTimer);
+      if (this.ws) { this.ws.onclose = null; this.ws.onmessage = null; try { this.ws.close(); } catch (e) {} }
+      this.ws = null;
+      const was = this.connected;
+      this.connected = false;
+      if (was) this.onStatus('disconnected');
+      this.closedByUser = false;
+      this.urlIdx = 0;
+      this.retry = 0;
+      this._open();
+    }
 
     stop() {
       this.closedByUser = true;
@@ -72,7 +88,7 @@
         const body = [...str('MQTT'), 4, flags, this.keepalive >> 8, this.keepalive & 0xff, ...payload];
         ws.send(packet(0x10, body));
       };
-      ws.onmessage = (ev) => this._data(new Uint8Array(ev.data));
+      ws.onmessage = (ev) => { this.lastRx = Date.now(); this._data(new Uint8Array(ev.data)); };
       ws.onerror = () => {};
       ws.onclose = () => {
         clearTimeout(openTimeout);
@@ -122,9 +138,12 @@
         this.onStatus('connected', this.urls[this.urlIdx % this.urls.length]);
         this.subs.forEach((t) => this._sendSub(t));
         clearInterval(this.pingTimer);
+        this.lastRx = Date.now();
         this.pingTimer = setInterval(() => {
+          // 응답이 한참 없으면 죽은 연결로 보고 끊은 뒤 재연결
+          if (Date.now() - this.lastRx > 50000) { try { this.ws.close(); } catch (e) {} return; }
           try { this.ws.send(new Uint8Array([0xc0, 0])); } catch (e) {}
-        }, (this.keepalive - 10) * 1000);
+        }, 20000);
       } else if (type === 3) { // PUBLISH
         const qos = (head >> 1) & 3;
         const tlen = (body[0] << 8) | body[1];

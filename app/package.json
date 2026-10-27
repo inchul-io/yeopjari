@@ -1,7 +1,7 @@
 {
   "name": "yeop",
   "productName": "옆자리",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "동료들과 쓰는 데스크톱 캐릭터 메신저",
   "main": "main.js",
   "author": "옆자리"

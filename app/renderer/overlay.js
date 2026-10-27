@@ -186,14 +186,16 @@
 
   function upsertPresence(p, seenAt) {
     if (!p || !p.id) return;
-    const c = chars.get(p.id) || makeChar(p);
+    const prev = chars.get(p.id);
+    if (prev && prev.at && p.at < prev.at) return;
+    const c = prev || makeChar(p);
     Object.assign(c, { name: p.name, animal: p.animal, color: p.color, status: p.status, at: p.at, seenAt });
     c.tag.textContent = p.name + (p.id === cfg.userId ? ' (나)' : '');
     c.drawn = '';
   }
 
   function effectiveStatus(c) {
-    if (c.id === cfg.userId) return connected ? myStatus : 'online';
+    if (c.id === cfg.userId) return connected ? myStatus : (Date.now() - startedAt > 15000 ? 'offline' : 'online');
     if (c.status === 'offline') return 'offline';
     if (Date.now() - c.seenAt > STALE_MS) return 'offline';
     return c.status || 'online';
@@ -442,22 +444,33 @@
   // ---------- 통신 ----------
   const T_PRESENCE = root + '/p/';
   const T_EVENT = root + '/e';
-  const myPresence = (status) => ({
-    id: cfg.userId, name: cfg.name, animal: cfg.animal, color: cfg.color, status, at: Date.now(),
+  const myPresence = (status, bye) => ({
+    id: cfg.userId, name: cfg.name, animal: cfg.animal, color: cfg.color, status, at: Date.now(), ...(bye ? { bye: true } : {}),
   });
 
   const willPayload = await seal(myPresence('offline'));
-  const client = new MqttLite({
-    urls: cfg.brokers,
+  // 무료 서버 2곳에 동시에 연결: 한 곳이 끊기거나 막혀도 다른 곳으로 계속 주고받음
+  const B = cfg.brokers || [];
+  const LINKS = B.length >= 3 && !cfg.customBroker ? [[B[0], B[2]], [B[1], B[2]]]
+    : cfg.customBroker ? [[B[0]], B.slice(1)] : [B];
+  const startedAt = Date.now();
+  function refreshConn() {
+    const was = connected;
+    connected = clients.some((c) => c.connected);
+    if (connected) statusEl.classList.remove('show');
+    else {
+      statusEl.textContent = '연결 재시도 중… (회사 방화벽이면 설정에서 서버 변경)';
+      statusEl.classList.add('show');
+    }
+    return !was && connected;
+  }
+  const clients = LINKS.filter((u) => u.length).map((urls) => new MqttLite({
+    urls,
     clientId: 'yeop-' + cfg.userId.slice(0, 8) + '-' + Math.random().toString(36).slice(2, 8),
     will: { topic: T_PRESENCE + cfg.userId, payload: willPayload, retain: true },
     onStatus: (s) => {
-      connected = s === 'connected';
-      if (connected) { publishPresence(); statusEl.classList.remove('show'); }
-      else if (s === 'retry' || s === 'disconnected' || s === 'refused') {
-        statusEl.textContent = '연결 재시도 중… (회사 방화벽이면 설정에서 서버 변경)';
-        statusEl.classList.add('show');
-      }
+      refreshConn();
+      if (s === 'connected') publishPresence();
     },
     onMessage: async (topic, payload, retained) => {
       if (!payload.length) return;
@@ -470,20 +483,21 @@
         handleEvent(data);
       }
     },
-  });
-  client.subscribe(T_PRESENCE + '+');
-  client.subscribe(T_EVENT);
+  }));
+  clients.forEach((c) => { c.subscribe(T_PRESENCE + '+'); c.subscribe(T_EVENT); });
+  const publishAll = (topic, data, retain) => clients.forEach((c) => c.publish(topic, data, retain));
+  const restartAll = () => clients.forEach((c) => c.restart());
 
-  async function publishPresence(status) {
-    const p = myPresence(status || myStatus);
+  async function publishPresence(status, bye) {
+    const p = myPresence(status || myStatus, bye);
     upsertPresence(p, Date.now());
-    client.publish(T_PRESENCE + cfg.userId, await seal(p), true);
+    publishAll(T_PRESENCE + cfg.userId, await seal(p), true);
   }
   async function sendEvent(ev) {
     ev.from = cfg.userId;
     ev.at = Date.now();
     handleEvent(ev); // 내 화면에 바로 반영
-    client.publish(T_EVENT, await seal(ev), false);
+    publishAll(T_EVENT, await seal(ev), false);
   }
   const seenEvents = new Set();
   function handleEvent(ev) {
@@ -525,12 +539,16 @@
     const me = chars.get(cfg.userId);
     if (me) say(me, `🎉 v${u.to} 업데이트 완료!${u.notes ? '\n' + u.notes : ''}`, 9000);
   });
-  api.onGoingOffline(async () => { await publishPresence('offline'); setTimeout(() => client.stop(), 200); });
+  api.onGoingOffline(async () => { await publishPresence('offline', true); setTimeout(() => clients.forEach((c) => c.stop()), 200); });
+  // 절전 들어갈 때: '나감' 알리고 연결은 유지 / 깨어날 때·네트워크 바뀔 때: 새로 연결
+  api.onSuspend(async () => { await publishPresence('offline', true); });
+  api.onResume(() => restartAll());
+  window.addEventListener('online', () => restartAll());
   setInterval(() => { if (connected) publishPresence(); }, 30000);
   window.addEventListener('resize', () => { for (const c of chars.values()) c.x = Math.min(c.x, W() - 40); });
 
   upsertPresence(myPresence(myStatus), Date.now());
-  client.start();
+  clients.forEach((c) => c.start());
   try {
     if (!localStorage.getItem('tip-v14')) {
       localStorage.setItem('tip-v14', '1');

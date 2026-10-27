@@ -21,4 +21,6 @@ contextBridge.exposeInMainWorld('yeop', {
   onGoingOffline: on('going-offline'),
   onHistory: on('history'),
   onUpdated: on('updated'),
+  onSuspend: on('suspend'),
+  onResume: on('resume'),
 });
